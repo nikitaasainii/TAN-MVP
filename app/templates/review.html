@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Review your order{% endblock %}
+{% block content %}
+<section class="review">
+  <h1>Review your order</h1>
+  <p class="review-intro">Check every choice below. Use Edit to change anything, then confirm to continue.</p>
+
+  <div class="review-list" id="review-list">
+    {% for it in review_items %}
+    <article class="review-item" data-index="{{ it.index }}">
+      <img class="review-img" src="/static/img/products/{{ it.image }}" alt="{{ it.name }}">
+      <div class="review-body">
+        <h2>{{ it.name }}</h2>
+        <dl class="review-facts">
+          <dt>Size</dt><dd>{{ it.size }}</dd>
+          <dt>Fabric</dt><dd>{{ it.fabric }}{% if it.fabric_info %}<span class="review-sub">{{ it.fabric_info.drape }} &middot; Stretch: {{ it.fabric_info.stretch }} &middot; {{ it.fabric_info.care }}</span>{% endif %}</dd>
+          <dt>Colour</dt><dd>{{ it.colour }}</dd>
+          <dt>Custom fit</dt><dd>{% if it.custom_fit %}Yes (+₹200){% if it.custom_fit_note %}: {{ it.custom_fit_note }}{% endif %}{% else %}No{% endif %}</dd>
+          <dt>Notes</dt><dd>{{ it.notes or 'None' }}</dd>
+          <dt>Reference photo</dt>
+          <dd>{% if it.photo %}<a href="/uploads/{{ it.photo }}" target="_blank" rel="noopener"><img class="review-photo" src="/uploads/{{ it.photo }}" alt="Your reference photo for {{ it.name }}"></a>{% else %}None{% endif %}</dd>
+          <dt>Quantity</dt><dd>{{ it.quantity }}</dd>
+        </dl>
+        {% if it.warning %}<p class="fabric-warning" role="status">Heads up: {{ it.warning }}</p>{% endif %}
+        <div class="review-actions">
+          <a class="btn btn-small" href="/products/{{ it.slug }}?edit={{ it.index }}">Edit</a>
+          <button type="button" class="btn btn-small btn-white review-remove" data-index="{{ it.index }}">Remove</button>
+        </div>
+      </div>
+      <div class="review-price">{{ it.line_total|inr }}</div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <div class="review-total"><span>Subtotal</span><span>{{ cart['subtotal']|inr }}</span></div>
+  <p class="review-note">Shipping is free for this demo. Your order number is shown after you place the order.</p>
+  <div class="review-foot">
+    <a class="btn btn-white" href="/products">Add another piece</a>
+    <a class="btn" id="confirm-order" href="/checkout">Confirm and continue</a>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/review.js"></script>{% endblock %}
