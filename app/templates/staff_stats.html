@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Stats (staff view){% endblock %}
+{% block content %}
+<section class="staff staff-stats">
+  <a class="back-link" href="/staff/orders"><span aria-hidden="true">&#8249;</span> All orders</a>
+  <h1>Stats <span class="staff-tag">Staff view (MVP)</span></h1>
+  <p class="muted">Demo data. Shows how much rework the feedback checkpoints catch and where orders spend their time.</p>
+
+  <div class="stat-cards">
+    <div class="stat-card"><div class="stat-num">{{ summary.orders }}</div><div>Orders</div></div>
+    <div class="stat-card"><div class="stat-num">{{ summary.rounds }}</div><div>Feedback rounds (changes requested)</div></div>
+    <div class="stat-card"><div class="stat-num">{{ summary.avg_rounds }}</div><div>Rounds per order</div></div>
+    <div class="stat-card"><div class="stat-num">{{ summary.reworked }}</div><div>Orders with changes requested</div></div>
+    <div class="stat-card"><div class="stat-num">{{ summary.approvals }}</div><div>Approvals</div></div>
+  </div>
+
+  {% if not rows %}
+  <p class="staff-empty">No orders yet. Stats appear once orders are placed.</p>
+  {% else %}
+  <h2 class="staff-sub">Per order</h2>
+  <div class="table-wrap">
+    <table class="orders" id="stats-table">
+      <thead>
+        <tr>
+          <th>Order</th><th>Current stage</th><th>Feedback rounds</th><th>Approvals</th>
+          {% for name in stages[:-1] %}<th>Time in {{ name }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><a href="/staff/orders/{{ r.order_no }}"><strong>{{ r.order_no }}</strong></a><br><span class="muted">{{ r.product_name }}</span></td>
+          <td>{{ r.stage_name }}</td>
+          <td>{{ r.rounds }}</td>
+          <td>{{ r.approvals }}</td>
+          {% for c in r.cells[:-1] %}<td>{{ c.text }}{% if c.open %}<br><span class="muted">so far</span>{% endif %}</td>{% endfor %}
+        </tr>
+        {% endfor %}
+        <tr class="stats-avg">
+          <td colspan="4"><strong>Average (finished stages only)</strong></td>
+          {% for a in averages[:-1] %}<td>{{ a }}</td>{% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
