@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Track your order{% endblock %}
+{% block content %}
+<section class="track">
+  <h1>Track your order</h1>
+  <form class="track-form" method="get" action="/track">
+    <label for="order_no" class="track-label">Order number</label>
+    <div class="track-row">
+      <input id="order_no" name="order_no" type="text" value="{{ value }}" placeholder="For example ORD-1001" autocomplete="off"{% if error %} aria-invalid="true"{% endif %}>
+      <button type="submit" class="btn btn-small">Track</button>
+    </div>
+    {% if error %}<p class="field-error" role="alert">{{ error }}</p>{% endif %}
+  </form>
+
+  {% if order %}
+  <div class="track-summary">
+    <div class="track-no">{{ order.order_no }}</div>
+    <div>{{ order.product_name }} &middot; {{ order.size }} &middot; {{ order.fabric }} &middot; {{ order.colour }}</div>
+    <div class="muted">Placed {{ order.created_at }}</div>
+  </div>
+
+  <p class="track-status" role="status">
+    {% if delivered %}Your order has been delivered.{% else %}Current stage: <strong>{{ stage_name }}</strong>{% endif %}
+  </p>
+
+  <ol class="tracker" aria-label="Order stages">
+    {% for st in steps %}
+    <li class="tracker-step {{ st.state }}{% if loop.last and st.state == 'current' %} final{% endif %}"{% if st.state == 'current' %} aria-current="step"{% endif %}>
+      <span class="tracker-dot">{{ st.dot }}</span>
+      <span class="tracker-name">{{ st.name }}</span>
+      <span class="tracker-time">{{ st.time }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+
+  {% set current_imgs = images|selectattr('stage', 'equalto', order.stage)|list %}
+  {% set older_imgs = images|rejectattr('stage', 'equalto', order.stage)|list %}
+  {% if checkpoint %}
+  <section class="checkpoint" id="checkpoint" aria-labelledby="cp-title">
+    {% if review == 'awaiting' %}
+    <span class="badge badge-wait">Your response needed</span>
+    <h2 id="cp-title">Please review your {{ checkpoint }}</h2>
+    <p>TAN will not move on to the next stage until you respond. Approve it if it looks right, or tell us what to change.</p>
+    {% if current_imgs %}
+    <figure class="cp-image">
+      <a href="/uploads/{{ current_imgs[0].filename }}" target="_blank"><img src="/uploads/{{ current_imgs[0].filename }}" alt="Your {{ checkpoint }} from TAN"></a>
+      <figcaption>{% if current_imgs[0].note %}{{ current_imgs[0].note }} &middot; {% endif %}<span class="muted">Shared {{ current_imgs[0].created_at }}</span></figcaption>
+    </figure>
+    {% else %}
+    <p class="muted">TAN has not attached an image for this stage yet.</p>
+    {% endif %}
+    <div class="cp-actions">
+      <form method="post" action="/track/{{ order.order_no }}/approve">
+        <button class="btn btn-small" type="submit">Approve {{ checkpoint }}</button>
+      </form>
+      <form class="cp-changes" method="post" action="/track/{{ order.order_no }}/changes">
+        <label for="comment">Or request changes</label>
+        <textarea id="comment" name="comment" rows="3" maxlength="500" placeholder="For example: please make the neckline lower"{% if comment_error %} aria-invalid="true"{% endif %}>{{ comment_value }}</textarea>
+        {% if comment_error %}<p class="field-error" role="alert">{{ comment_error }}</p>{% endif %}
+        <button class="btn btn-small btn-white" type="submit">Request changes</button>
+      </form>
+    </div>
+    {% elif review == 'approved' %}
+    <span class="badge badge-ok">Approved</span>
+    <h2 id="cp-title">You approved the {{ checkpoint }}</h2>
+    <p>Thank you. TAN will move your order to the next stage.</p>
+    {% elif review == 'changes_requested' %}
+    <span class="badge badge-change">Changes requested</span>
+    <h2 id="cp-title">We have your change request</h2>
+    <p>TAN will update the {{ checkpoint }} and share a new version for you to review.</p>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% set gallery = (current_imgs[1:] if (checkpoint and review == 'awaiting') else current_imgs) + older_imgs %}
+  {% if gallery %}
+  <section class="image-gallery" aria-labelledby="img-title">
+    <h2 id="img-title">Images from TAN</h2>
+    <ul class="img-grid">
+      {% for im in gallery %}
+      <li>
+        <a href="/uploads/{{ im.filename }}" target="_blank"><img src="/uploads/{{ im.filename }}" alt="{{ im.stage_name }} image"></a>
+        <div><strong>{{ im.stage_name }}</strong></div>
+        {% if im.note %}<div>{{ im.note }}</div>{% endif %}
+        <div class="muted">{{ im.created_at }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if feedback %}
+  <section class="feedback-history" aria-labelledby="fb-title">
+    <h2 id="fb-title">Your feedback so far</h2>
+    <ul class="fb-list">
+      {% for f in feedback|reverse %}
+      <li>
+        <span class="fb-label fb-{{ f.kind }}">{{ f.label }}</span>
+        <span class="muted">{{ f.stage_name }} &middot; {{ f.created_at }}</span>
+        {% if f.comment %}<div class="fb-comment">{{ f.comment }}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

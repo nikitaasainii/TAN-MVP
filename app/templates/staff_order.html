@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ order.order_no }} (staff view){% endblock %}
+{% block content %}
+<section class="staff staff-detail">
+  <a class="back-link" href="/staff/orders"><span aria-hidden="true">&#8249;</span> All orders</a> <a class="staff-link-right" href="/staff/stats">Stats</a>
+  <h1>{{ order.order_no }} <span class="staff-tag">Staff view (MVP)</span></h1>
+
+  <div class="staff-card">
+    <p><strong>{{ order.product_name }}</strong> &middot; {{ order.size }} &middot; {{ order.fabric }} &middot; {{ order.colour }} &middot; Qty {{ order.quantity }}</p>
+    <p class="muted">{{ order.customer_name }} &middot; {{ order.email }} &middot; {{ order.phone }}</p>
+    <p>Current stage: <strong>{{ stages[order.stage] }}</strong> (stage {{ order.stage + 1 }} of {{ stages|length }})</p>
+    {% if order.review == 'awaiting' %}<p><span class="badge badge-wait">Awaiting customer</span> The customer must approve the {{ checkpoint }} before this order can move on.</p>
+    {% elif order.review == 'approved' %}<p><span class="badge badge-ok">Approved</span> The customer approved the {{ checkpoint }}.</p>
+    {% elif order.review == 'changes_requested' %}<p><span class="badge badge-change">Changes requested</span> Update the {{ checkpoint }}, then share a revised version.</p>{% endif %}
+    {% if order.stage < stages|length - 1 %}
+    {% if order.review == 'changes_requested' %}
+    <form method="post" action="/staff/orders/{{ order.order_no }}/revision">
+      <input type="hidden" name="back" value="detail">
+      <button class="btn btn-small" type="submit">Mark revised version shared</button>
+    </form>
+    {% endif %}
+    <form method="post" action="/staff/orders/{{ order.order_no }}/advance">
+      <input type="hidden" name="back" value="detail">
+      <button class="btn btn-small" type="submit"{% if order.review in ('awaiting', 'changes_requested') %} disabled{% endif %}>Advance to {{ stages[order.stage + 1] }}</button>
+    </form>
+    {% else %}
+    <p class="muted">This order is delivered. No further stages.</p>
+    {% endif %}
+    <p><a href="/track/{{ order.order_no }}">Open customer tracking page</a></p>
+  </div>
+
+  <h2 class="staff-sub" id="images">Share an image with the customer</h2>
+  <div class="staff-card image-upload">
+    <p>Upload a photo of the {{ checkpoint or 'work so far' }} for <strong>{{ stages[order.stage] }}</strong>. The customer sees it on their tracking page{% if checkpoint %}, next to the Approve and Request changes buttons{% endif %}.</p>
+    {% if order.review == 'changes_requested' %}<p class="muted">The customer asked for changes. Upload the revised image, then click &ldquo;Mark revised version shared&rdquo; above.</p>{% endif %}
+    <form method="post" action="/staff/orders/{{ order.order_no }}/image" enctype="multipart/form-data">
+      <label for="photo">Image (JPG, PNG or WEBP, up to 5 MB)</label>
+      <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp"{% if upload_error %} aria-invalid="true"{% endif %}>
+      <label for="note">Caption (optional)</label>
+      <input id="note" name="note" type="text" maxlength="200" value="{{ note_value }}" placeholder="For example: Sketch v2 with a lower neckline">
+      {% if upload_error %}<p class="field-error" role="alert">{{ upload_error }}</p>{% endif %}
+      <button class="btn btn-small" type="submit">Upload image</button>
+    </form>
+  </div>
+  {% if images %}
+  <ul class="img-grid" id="shared-images">
+    {% for im in images %}
+    <li>
+      <a href="/uploads/{{ im.filename }}" target="_blank"><img src="/uploads/{{ im.filename }}" alt="{{ im.stage_name }} image for {{ order.order_no }}"></a>
+      <div><strong>{{ im.stage_name }}</strong></div>
+      {% if im.note %}<div>{{ im.note }}</div>{% endif %}
+      <div class="muted">{{ im.created_at }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="staff-empty">No images shared yet.</p>
+  {% endif %}
+
+  <h2 class="staff-sub">Customer feedback</h2>
+  {% if feedback %}
+  <div class="table-wrap feedback-table">
+    <table class="orders" id="feedback-log">
+      <thead><tr><th>Time</th><th>Stage</th><th>Type</th><th>Comment</th></tr></thead>
+      <tbody>
+        {% for f in feedback|reverse %}
+        <tr><td>{{ f.created_at }}</td><td>{{ f.stage_name }}</td><td><span class="fb-label fb-{{ f.kind }}">{{ f.label }}</span></td><td>{{ f.comment or '-' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="staff-empty">No feedback yet. It appears here when the customer approves a checkpoint or requests changes.</p>
+  {% endif %}
+
+  <h2 class="staff-sub">Stage history</h2>
+  <div class="table-wrap">
+    <table class="orders" id="history">
+      <thead><tr><th>Time</th><th>Stage</th></tr></thead>
+      <tbody>
+        {% for h in history|reverse %}
+        <tr><td>{{ h.changed_at }}</td><td>{{ h.stage_name }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
