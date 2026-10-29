@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block body_class %}page-checkout{% endblock %}
+{% block header %}<div class="co-header"><a href="/" aria-label="TAN home"><img src="/static/img/logo.png" alt="TAN"></a></div>{% endblock %}
+{% block footer %}{% endblock %}
+
+{% macro field(name, label, type='text', cls='') -%}
+<div class="co-field {{ cls }}{% if errors.get(name) %} has-error{% endif %}">
+  <input type="{{ type }}" id="{{ name }}" name="{{ name }}" value="{{ values.get(name, '') }}" placeholder="{{ label }}" aria-label="{{ label }}"{% if errors.get(name) %} aria-invalid="true"{% endif %}>
+  {% if errors.get(name) %}<p class="field-error">{{ errors[name] }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% block content %}
+<form class="co-grid" method="post" action="/checkout" novalidate>
+  <section class="co-left">
+    <div class="co-inner">
+      <div class="co-signin">Already have an account? <a href="#">Sign in</a></div>
+
+      <h2>Contact</h2>
+      <label class="co-label" for="email">Email</label>
+      {{ field('email', '', 'email') }}
+
+      <h2>Delivery</h2>
+      <div class="co-label">Delivery method</div>
+      <div class="co-method">
+        <div><strong>Shipping</strong><span>Ship to your address</span></div>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h11v10H2zM13 10h4l3 3v3h-7"/><circle cx="7" cy="17.500" r="1.800"/><circle cx="16.500" cy="17.500" r="1.800"/></svg>
+      </div>
+
+      <h2>Shipping</h2>
+      <div class="co-label">Shipping address</div>
+      <div class="co-field co-select"><select aria-label="Country"><option>India</option></select></div>
+      <div class="co-row">
+        {{ field('first_name', 'First Name') }}
+        {{ field('last_name', 'Last Name') }}
+      </div>
+      {{ field('address', 'Address') }}
+      {{ field('apartment', 'Apartment, suite, etc. (optional)') }}
+      <div class="co-row co-row-3">
+        {{ field('city', 'City') }}
+        <div class="co-field co-select{% if errors.get('state') %} has-error{% endif %}">
+          <select name="state" aria-label="State/Territory">
+            <option value="">State/Territory</option>
+            {% for s in states %}<option value="{{ s }}"{% if values.get('state') == s %} selected{% endif %}>{{ s }}</option>{% endfor %}
+          </select>
+          {% if errors.get('state') %}<p class="field-error">{{ errors['state'] }}</p>{% endif %}
+        </div>
+        {{ field('postcode', 'Postcode') }}
+      </div>
+      {{ field('phone', 'Phone number (+91)', 'tel') }}
+
+      <div class="co-note">Shipping is free for this demo. Payment is not part of this MVP, so orders are saved as placed.</div>
+      <button type="submit" class="btn btn-block co-submit">Place order</button>
+    </div>
+  </section>
+
+  <aside class="co-right">
+    <div class="co-right-inner">
+      <button type="button" class="co-edit" id="edit-cart">Edit cart</button>
+      {% for it in cart['items'] %}
+      <div class="co-item">
+        <img src="/static/img/products/{{ it.image }}" alt="{{ it.name }}">
+        <div class="co-item-body">
+          <div class="co-item-name">{{ it.name }} <span>({{ it.size }})</span></div>
+          <div class="co-item-meta">Fabric: {{ it.fabric }} &middot; Colour: {{ it.colour }}</div>
+          {% if it.custom_fit %}<div class="co-item-meta">Custom Fit Request: {{ it.custom_fit_note }}</div>{% endif %}
+          {% if it.notes %}<div class="co-item-meta">Notes: {{ it.notes }}</div>{% endif %}
+          {% if it.photo %}<div class="co-item-meta">Reference photo attached</div>{% endif %}
+          <div class="co-item-meta">Quantity: {{ it.quantity }}</div>
+        </div>
+        <div class="co-item-price">{{ it.line_total|inr }}</div>
+      </div>
+      {% endfor %}
+      <div class="co-sum"><span>Subtotal</span><span>{{ cart['subtotal']|inr }}</span></div>
+      <div class="co-sum-sub">{{ cart['count'] }} items</div>
+      <div class="co-sum"><span>Shipping</span><span>₹0.00</span></div>
+      <div class="co-sum"><span>Estimated GST</span><span>₹0.00</span></div>
+      <div class="co-coupon"><input type="text" placeholder="Coupon code" aria-label="Coupon code" disabled><span>Apply</span></div>
+      <div class="co-total"><span>Total Due</span><span><small>INR</small> {{ cart['subtotal']|inr }}</span></div>
+    </div>
+  </aside>
+</form>
+{% endblock %}
+{% block scripts %}<script>document.getElementById('edit-cart').addEventListener('click',function(){window.TANCart.open();});</script>{% endblock %}

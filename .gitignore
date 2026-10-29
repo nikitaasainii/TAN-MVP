@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+app/tan_mvp.db
+app/uploads/*
+!app/uploads/.gitkeep

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+{% set e = edit_item or {} %}
+<section class="pdp">
+  {% if edit_item %}
+  <a class="back-link" href="/review"><span aria-hidden="true">&#8249;</span> Back to review</a>
+  {% else %}
+  <a class="back-link" href="/products"><span aria-hidden="true">&#8249;</span> All Products</a>
+  {% endif %}
+  <div class="pdp-grid">
+    <div class="pdp-media">
+      <img class="pdp-main" src="/static/img/products/{{ product.detail_image }}" alt="{{ product.name }}">
+    </div>
+
+    <form class="pdp-info" id="order-form" novalidate enctype="multipart/form-data"{% if edit_item %} data-edit-index="{{ edit_index }}"{% endif %}>
+      {% if edit_item %}<p class="edit-banner">Editing your selection</p>{% endif %}
+      <h1>{{ product.name }}</h1>
+      <div class="pdp-price" id="price" data-base="{{ product.price }}" data-fee="{{ fit_fee }}">{{ (product.price + (fit_fee if e.get('custom_fit') else 0))|inr }}</div>
+      <input type="hidden" name="slug" value="{{ product.slug }}">
+
+      <fieldset class="opt">
+        <legend>Size</legend>
+        <div class="sizes">
+          {% for s in sizes %}
+          <label class="size-box"><input type="radio" name="size" value="{{ s }}"{% if e.get('size') == s %} checked{% endif %}><span>{{ s }}</span></label>
+          {% endfor %}
+        </div>
+        <p class="field-error" data-error="size" hidden></p>
+      </fieldset>
+
+      <fieldset class="opt">
+        <legend>Fabric</legend>
+        <div class="chips">
+          {% for f in fabrics %}
+          <label class="chip"><input type="radio" name="fabric" value="{{ f }}"{% if e.get('fabric') == f %} checked{% endif %}><span>{{ f }}</span></label>
+          {% endfor %}
+        </div>
+        <p class="field-error" data-error="fabric" hidden></p>
+        <div class="fabric-card" id="fabric-card" aria-live="polite">
+          <p class="fabric-empty" id="fabric-empty">Choose a fabric to see how it looks and behaves.</p>
+          <div id="fabric-info" hidden>
+            <h3 id="fab-name"></h3>
+            <p id="fab-desc"></p>
+            <dl>
+              <dt>Drape</dt><dd id="fab-drape"></dd>
+              <dt>Stretch</dt><dd id="fab-stretch"></dd>
+              <dt>Care</dt><dd id="fab-care"></dd>
+            </dl>
+          </div>
+          <p class="fabric-warning" id="fabric-warning" role="status" hidden></p>
+        </div>
+      </fieldset>
+
+      <fieldset class="opt">
+        <legend>Colour <span class="opt-value" id="colour-name">{{ e.get('colour', '') }}</span></legend>
+        <div class="swatches">
+          {% for c in colours %}
+          <label class="swatch" title="{{ c.name }}"><input type="radio" name="colour" value="{{ c.name }}" data-name="{{ c.name }}"{% if e.get('colour') == c.name %} checked{% endif %}><span style="background:{{ c.hex }}"></span></label>
+          {% endfor %}
+        </div>
+        <p class="field-error" data-error="colour" hidden></p>
+      </fieldset>
+
+      <div class="opt">
+        <label class="opt-label" for="notes">Notes for TAN <span class="opt-hint">(optional)</span></label>
+        <textarea id="notes" name="notes" maxlength="500" rows="3" placeholder="For example: add pockets, change the neckline, make it shorter">{{ e.get('notes', '') }}</textarea>
+        <p class="field-error" data-error="notes" hidden></p>
+      </div>
+
+      <div class="opt">
+        <span class="opt-label">Reference photo <span class="opt-hint">(optional)</span></span>
+        <label class="upload">
+          <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/webp">
+          <span id="upload-text">{{ 'Replace photo' if e.get('photo') else 'Upload a photo of the look you have in mind' }}</span>
+        </label>
+        <div class="upload-preview" id="upload-preview" hidden></div>
+        {% if e.get('photo') %}
+        <div class="upload-current" id="upload-current">
+          <img src="/uploads/{{ e.photo }}" alt="Current reference photo">
+          <label class="remove-photo"><input type="checkbox" name="remove_photo" id="remove_photo"> Remove this photo</label>
+        </div>
+        {% endif %}
+        <p class="field-error" data-error="photo" hidden></p>
+      </div>
+
+      <label class="fit-row"><input type="checkbox" name="custom_fit" id="custom_fit"{% if e.get('custom_fit') %} checked{% endif %}> Custom Fit Request (+₹{{ fit_fee }}) (optional)</label>
+      <div id="fit-box"{% if not e.get('custom_fit') %} hidden{% endif %}>
+        <textarea name="custom_fit_note" id="fit-note" maxlength="255" rows="4" aria-label="Custom fit request">{{ e.get('custom_fit_note', '') }}</textarea>
+        <div class="counter"><span id="fit-count">{{ e.get('custom_fit_note', '')|length }}</span> / 255</div>
+        <p class="field-error" data-error="custom_fit_note" hidden></p>
+      </div>
+
+      <div class="opt qty">
+        <label class="qty-label" for="qty">Quantity</label>
+        <input id="qty" name="quantity" type="number" min="1" max="10" value="{{ e.get('quantity', 1) }}">
+        <p class="field-error" data-error="quantity" hidden></p>
+      </div>
+
+      <div class="pdp-actions">
+        {% if edit_item %}
+        <button type="button" class="btn" id="save-edit">Save changes</button>
+        <a class="btn" href="/review">Cancel</a>
+        {% else %}
+        <button type="button" class="btn" id="buy-now">Buy now</button>
+        <button type="button" class="btn" id="add-to-cart">Add to cart</button>
+        {% endif %}
+      </div>
+      <p class="field-error" data-error="form" hidden></p>
+
+      <div class="share">Share:
+        <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#161616"/><path d="M13.2 19v-6.3h2.1l.4-2.5h-2.5V8.7c0-.7.3-1.2 1.3-1.2h1.3V5.3c-.2 0-1-.1-1.9-.1-1.9 0-3.2 1.200-3.200 3.300v1.700H8.600v2.500h2.100V19z" fill="#fff"/></svg>
+        <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.800 3h3l-6.600 7.500L22 21h-6.100l-4.800-6.200L5.600 21h-3l7.100-8.100L2.200 3h6.200l4.300 5.700zm-1 16.200h1.700L7.300 4.700H5.500z" fill="#161616"/></svg>
+      </div>
+      <p class="pdp-desc">{{ product.description }}</p>
+      <p class="demo-note">Fabric and colour options are demo data for this MVP.</p>
+    </form>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script id="fabric-data" type="application/json">{{ {"details": fabric_details, "warnings": warnings}|tojson }}</script>
+<script src="/static/js/product.js"></script>
+{% endblock %}

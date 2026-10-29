@@ -1,0 +1,28 @@
+<div class="backdrop" id="backdrop" hidden></div>
+
+<nav class="drawer drawer-left" id="nav-drawer" aria-label="Main menu" hidden>
+  <button class="drawer-close" type="button" data-close aria-label="Close menu">&times;</button>
+  <ul class="nav-list">
+    <li><a href="/">Home</a></li>
+    <li><a href="/products">Clothing</a>
+      <ul><li><a href="/products">View All</a></li></ul>
+    </li>
+    <li><a href="/track">Track your order</a></li>
+    <li><a href="#">FAQ</a></li>
+  </ul>
+  <div class="nav-staff"><a href="/staff/orders">Staff view (MVP)</a><br><a href="/staff/stats">Staff stats (MVP)</a></div>
+</nav>
+
+<aside class="drawer drawer-right" id="cart-drawer" aria-label="Cart" hidden>
+  <button class="drawer-close" type="button" data-close aria-label="Close cart">&times;</button>
+  <h2 class="drawer-title">Cart</h2>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer">
+    <div class="coupon-row">
+      <input type="text" placeholder="Coupon code" aria-label="Coupon code" disabled>
+      <span class="coupon-apply">Apply</span>
+    </div>
+    <div class="subtotal-row"><span>Subtotal</span><span id="cart-subtotal">₹0.00</span></div>
+    <button class="btn btn-block" id="checkout-btn" type="button">Review order</button>
+  </div>
+</aside>

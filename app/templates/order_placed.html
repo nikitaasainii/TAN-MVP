@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Order placed{% endblock %}
+{% block body_class %}page-checkout{% endblock %}
+{% block header %}<div class="co-header"><a href="/" aria-label="TAN home"><img src="/static/img/logo.png" alt="TAN"></a></div>{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+<section class="placed">
+  <h1>Thank you, your order is placed</h1>
+  <p>We have saved your customisation. Your order {{ 'numbers are' if placed|length > 1 else 'number is' }}:</p>
+  <ul class="placed-list">
+    {% for o in placed %}
+    <li><strong>{{ o.order_no }}</strong> <span>{{ o.name }} &middot; {{ o.size }} &middot; {{ o.fabric }} &middot; {{ o.colour }}</span> <a class="track-link" href="/track/{{ o.order_no }}">Track this order</a></li>
+    {% endfor %}
+  </ul>
+  <a class="btn" href="/products">Continue shopping</a>
+</section>
+{% endblock %}

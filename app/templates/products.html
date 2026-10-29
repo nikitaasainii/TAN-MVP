@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}All Products{% endblock %}
+{% block content %}
+<section class="catalog">
+  <aside class="catalog-nav">
+    <a class="active" href="/products">All Products</a>
+    <a href="/products">Clothing</a>
+    <a href="/products">Collections</a>
+  </aside>
+  <div class="catalog-main">
+    <div class="catalog-head">
+      <h1>All Products</h1>
+      <span class="sort">Most popular <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg></span>
+    </div>
+    <div class="grid">
+      {% for p in products %}
+      <a class="card" href="/products/{{ p.slug }}">
+        <img src="/static/img/products/{{ p.image }}" alt="{{ p.name }}">
+        <h3>{{ p.name }}</h3>
+        <div class="card-price">{% if p.price_from %}From {% endif %}{{ p.price|inr }}</div>
+        <div class="card-more">More options</div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

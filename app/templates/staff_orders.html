@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Orders (staff view){% endblock %}
+{% block content %}
+<section class="staff">
+  <h1>Orders <span class="staff-tag">Staff view (MVP)</span></h1>
+  <p class="staff-links"><a href="/staff/stats">Stats: feedback rounds and time per stage</a></p>
+  {% if not orders %}
+  <p class="staff-empty">No orders yet. Orders appear here as soon as a customer places one.</p>
+  {% else %}
+  <div class="table-wrap">
+    <table class="orders">
+      <thead>
+        <tr><th>Order</th><th>Stage</th><th>Customer review</th><th>Placed</th><th>Customer</th><th>Piece</th><th>Fabric</th><th>Colour</th><th>Size</th><th>Custom fit</th><th>Notes</th><th>Photo</th><th>Qty</th><th>Total</th><th>Update stage</th></tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td><a href="/staff/orders/{{ o.order_no }}"><strong>{{ o.order_no }}</strong></a></td>
+          <td>{{ stages[o.stage] }}<br><span class="muted">{{ o.stage + 1 }} of {{ stages|length }}</span></td>
+          <td>{% if o.review == 'awaiting' %}<span class="badge badge-wait">Awaiting customer</span>{% elif o.review == 'approved' %}<span class="badge badge-ok">Approved</span>{% elif o.review == 'changes_requested' %}<span class="badge badge-change">Changes requested</span>{% else %}<span class="muted">-</span>{% endif %}</td>
+          <td>{{ o.created_at }}</td>
+          <td>{{ o.customer_name }}<br><span class="muted">{{ o.email }}<br>{{ o.phone }}</span></td>
+          <td>{{ o.product_name }}</td>
+          <td>{{ o.fabric }}</td>
+          <td>{{ o.colour }}</td>
+          <td>{{ o.size }}</td>
+          <td>{% if o.custom_fit %}Yes{% if o.custom_fit_note %}: {{ o.custom_fit_note }}{% endif %}{% else %}No{% endif %}</td>
+          <td>{{ o.notes or '-' }}</td>
+          <td>{% if o.photo %}<a href="/uploads/{{ o.photo }}" target="_blank"><img class="thumb" src="/uploads/{{ o.photo }}" alt="Reference photo for {{ o.order_no }}"></a>{% else %}-{% endif %}</td>
+          <td>{{ o.quantity }}</td>
+          <td>{{ o.total|inr }}</td>
+          <td>
+            {% if o.stage < stages|length - 1 %}
+              {% if o.review == 'changes_requested' %}
+              <form method="post" action="/staff/orders/{{ o.order_no }}/revision">
+                <button class="btn btn-small" type="submit">Mark revised version shared</button>
+              </form>
+              {% endif %}
+              <form method="post" action="/staff/orders/{{ o.order_no }}/advance">
+                <button class="btn btn-small" type="submit"{% if o.review in ('awaiting', 'changes_requested') %} disabled{% endif %}>Advance to {{ stages[o.stage + 1] }}</button>
+              </form>
+              {% if o.review == 'awaiting' %}<span class="muted block">Waiting for customer approval</span>
+              {% elif o.review == 'changes_requested' %}<span class="muted block">Customer asked for changes</span>{% endif %}
+            {% else %}<span class="muted">Delivered</span>{% endif %}
+            <a class="muted" href="/staff/orders/{{ o.order_no }}#images">Upload image / history</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
